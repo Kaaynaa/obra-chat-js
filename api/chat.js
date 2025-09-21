@@ -22,7 +22,7 @@ export default async function handler(req, res) {
           "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o", // modèle le plus puissant
+          model: "gpt-4o-mini", // modèle le plus puissant
           messages: [
             { role: "system", content: "Tu es Obra, un assistant pour artisans et entrepreneurs." },
             { role: "user", content: message }
