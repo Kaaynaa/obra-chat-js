@@ -10,11 +10,28 @@ export default async function handler(req, res) {
 
   if (req.method === "POST") {
     try {
-      const { message } = req.body;
+      const { message, metier } = req.body;
 
       if (!process.env.OPENAI_API_KEY) {
-        return res.status(500).json({ reply: "❌ Clé OpenAI manquante (vérifie tes variables dans Vercel)." });
+        return res.status(500).json({ reply: "❌ Clé OpenAI manquante (vérifie Vercel)." });
       }
+
+      const systemPrompt = `
+Tu es **Obra**, un assistant digital spécialisé pour aider les indépendants et petites entreprises.  
+Le client est un **${metier || "indépendant"}**.  
+
+👉 Adapte TOUTES tes réponses à son métier :
+- Si c’est un coiffeur → parle de gestion RDV, stocks de produits, promos.  
+- Si c’est une esthéticienne → hygiène, fidélisation, gestion clientèle.  
+- Si c’est un plombier → normes belges, devis matériaux + main-d’œuvre, organisation chantier.  
+- Si c’est un électricien → normes RGIE, sécurité, planning chantier.  
+- Si c’est un menuisier/peintre → matériaux, estimation quantités, devis clairs.  
+- Si c’est un coach sportif → programmes clients, motivation, offres packagées.  
+- Si c’est un commerçant → facturation, suivi paiements, fidélisation.  
+- Si c’est un **médecin, avocat, architecte ou autre métier non listé** → adapte-toi automatiquement avec du bon sens (gestion cabinet, relation clients/patients, organisation).  
+
+⚡ Toujours donner des réponses concrètes, pratiques et adaptées au secteur du client.
+      `;
 
       const apiRes = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -23,25 +40,9 @@ export default async function handler(req, res) {
           "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini", // ⚡ plus rapide et moins cher
+          model: "gpt-4o-mini",
           messages: [
-            {
-              role: "system",
-              content: `Tu es **Obra**, un assistant digital conçu pour aider les artisans, commerçants et indépendants 
-              (plombiers, électriciens, coiffeurs, esthéticiennes, menuisiers, peintres, etc.).
-              
-              Tes missions :
-              - Aider à rédiger des devis, factures et relances clients.
-              - Donner des conseils pratiques (gestion de planning, organisation, relation client).
-              - Fournir des explications simples sur les normes belges (ex. RGIE pour électriciens, règles de plomberie, hygiène pour coiffeurs/esthéticiennes).
-              - Adapter ton langage : professionnel, clair, jamais trop technique si ce n’est pas nécessaire.
-              - Répondre rapidement, de façon utile, comme un vrai assistant de confiance.
-              
-              IMPORTANT :
-              - Si tu n’as pas la réponse exacte, propose une solution logique ou une démarche concrète.
-              - Tu parles comme un assistant qui connaît le terrain (exemples concrets : planning de rendez-vous, prix moyens, astuces pratiques).
-              `
-            },
+            { role: "system", content: systemPrompt },
             { role: "user", content: message }
           ],
         }),
@@ -64,4 +65,3 @@ export default async function handler(req, res) {
 
   return res.status(405).json({ reply: "❌ Méthode non autorisée." });
 }
-
