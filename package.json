@@ -2,9 +2,14 @@
   "name": "obra",
   "version": "1.0.0",
   "scripts": {
-    "start": "vercel dev"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
+    "next": "14.0.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "@supabase/supabase-js": "^2.44.0"
   },
   "repository": "https://github.com/Kaaynaa/obra-chat-js"
