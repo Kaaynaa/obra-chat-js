@@ -47,3 +47,12 @@ Réponds toujours de façon concrète et pratique.
   return res.status(405).json({ reply: "❌ Méthode non autorisée." });
 }
 
+await fetch("https://n8n.srv586629.hstgr.cloud/webhook/Obra/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    channel: "obra_chat",
+    user: { id: userId, name: userName },
+    message: { type: "text", text: inputValue }
+  })
+});
