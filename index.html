@@ -1,1 +1,56 @@
 
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Obra Chat — Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background:#f6f6f9; margin:0; padding:40px; }
+      .box { max-width:680px; margin:0 auto; background:#fff; border-radius:10px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,.08); }
+      h1 { margin:0 0 6px; }
+      .row { display:flex; gap:8px; }
+      input { flex:1; padding:12px; border:1px solid #ddd; border-radius:8px; }
+      button { padding:12px 16px; border:0; border-radius:8px; background:#7c3aed; color:#fff; cursor:pointer; }
+      pre { background:#0b1020; color:#e5e7eb; padding:12px; border-radius:8px; overflow:auto; max-height:240px; }
+      .log { font-size:14px; color:#374151; margin:8px 0 0; }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h1>Obra Chat — Test</h1>
+      <p>Ce formulaire parle à <code>/api/chat</code>, qui appelle ton webhook N8N.</p>
+
+      <div class="row">
+        <input id="msg" placeholder="Écris un message…" />
+        <button id="send">Envoyer</button>
+      </div>
+
+      <p class="log" id="status"></p>
+      <h3>Réponse</h3>
+      <pre id="out">{}</pre>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      $('send').onclick = async () => {
+        const message = $('msg').value.trim();
+        if (!message) return;
+        $('status').textContent = '⏳ Envoi…';
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, userId: 'test123', userName: 'Paul' })
+          });
+          const data = await res.json();
+          $('out').textContent = JSON.stringify(data, null, 2);
+          $('status').textContent = '✅ OK';
+        } catch (e) {
+          $('status').textContent = '❌ Erreur';
+          $('out').textContent = String(e);
+        }
+      };
+    </script>
+  </body>
+</html>
