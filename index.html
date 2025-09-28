@@ -1,56 +1,190 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <title>Obra Chat — Test</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background:#f6f6f9; margin:0; padding:40px; }
-      .box { max-width:680px; margin:0 auto; background:#fff; border-radius:10px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,.08); }
-      h1 { margin:0 0 6px; }
-      .row { display:flex; gap:8px; }
-      input { flex:1; padding:12px; border:1px solid #ddd; border-radius:8px; }
-      button { padding:12px 16px; border:0; border-radius:8px; background:#7c3aed; color:#fff; cursor:pointer; }
-      pre { background:#0b1020; color:#e5e7eb; padding:12px; border-radius:8px; overflow:auto; max-height:240px; }
-      .log { font-size:14px; color:#374151; margin:8px 0 0; }
-    </style>
-  </head>
-  <body>
-    <div class="box">
-      <h1>Obra Chat — Test</h1>
-      <p>Ce formulaire parle à <code>/api/chat</code>, qui appelle ton webhook N8N.</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assistant Obra</title>
+  <style>
+    /* === STYLE WELCOME === */
+    .welcome { max-width: 900px; margin: 40px auto; text-align: center; font-family: 'Inter', Arial, sans-serif; padding: 15px; background: #fff; border-radius: 6px; }
+    .welcome h1 { font-size: 28px; font-weight: 800; color: #111; margin-bottom: 8px; display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .welcome .pro-badge { background: linear-gradient(135deg, #9333ea, #c084fc); color: #fff; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 6px; line-height: 1; }
+    .welcome p { font-size: 15px; color: #555; margin-bottom: 15px; line-height: 1.5; }
+    .welcome p strong { color: #9333ea; }
 
-      <div class="row">
-        <input id="msg" placeholder="Écris un message…" />
-        <button id="send">Envoyer</button>
-      </div>
+    /* === BARRE RECHERCHE === */
+    .search-bar { margin: 20px auto 0; max-width: 600px; position: relative; }
+    .search-bar input { width: 100%; padding: 12px 16px; border-radius: 6px; border: 1px solid #d8b4fe; font-size: 15px; color: #111; background: rgba(255,255,255,0.9); box-shadow: 0 2px 6px rgba(0,0,0,0.05); outline: none; transition: all 0.25s ease; }
+    .search-bar input:focus, .search-bar input:hover { background: #fff; border-color: #9333ea; box-shadow: 0 3px 10px rgba(147,51,234,0.25); }
 
-      <p class="log" id="status"></p>
-      <h3>Réponse</h3>
-      <pre id="out">{}</pre>
+    /* === CHAT TOGGLE === */
+    .chat-toggle { position: fixed; bottom: 20px; right: 20px; background: #9333ea; color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.25); transition: all 0.3s ease; z-index: 999999; }
+    .chat-toggle:hover { background: #7e22ce; transform: scale(1.05); }
+
+    /* === OVERLAY === */
+    .chat-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 999998; opacity: 0; transition: opacity 0.3s ease; }
+    .chat-overlay.active { display: block; opacity: 1; }
+
+    /* === POPUP === */
+    .chat-popup { position: fixed; bottom: 80px; right: 20px; width: 320px; max-height: 420px; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25); display: flex; flex-direction: column; z-index: 999999; opacity: 0; transform: translateY(20px); pointer-events: none; transition: all 0.3s ease; }
+    .chat-popup.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+    /* === HEADER === */
+    .chat-header { background: linear-gradient(135deg,#9333ea,#c084fc); color: #fff; padding: 12px; font-weight: 600; text-align: center; position: relative; }
+    .chat-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 18px; cursor: pointer; color: white; opacity: 0.8; transition: opacity 0.2s ease, transform 0.3s ease; }
+    .chat-close:hover { opacity: 1; transform: translateY(-50%) scale(1.2) rotate(90deg); }
+
+    /* === MESSAGES === */
+    .chat-messages { flex: 1; padding: 10px; overflow-y: auto; font-family: 'Inter', sans-serif; background: #fafafa; }
+    .message-wrapper { display: flex; align-items: flex-start; margin-bottom: 12px; animation: fadeIn 0.3s ease; }
+    .message-wrapper.user { justify-content: flex-end; }
+    .message-wrapper.ai { justify-content: flex-start; }
+    .message-avatar { font-size: 18px; margin-right: 6px; margin-top: 2px; }
+    .message { padding: 8px 12px 14px 12px; border-radius: 8px; max-width: 70%; word-wrap: break-word; position: relative; }
+    .message.user { background: #9333ea; color: white; }
+    .message.ai { background: #e9d5ff; color: #111; }
+    .timestamp { font-size: 9px; position: absolute; bottom: 2px; right: 8px; opacity: 0.6; }
+    .message.user .timestamp { color: #fff; }
+    .message.ai .timestamp { color: #555; }
+
+    /* === INPUT === */
+    .chat-input { display: flex; border-top: 1px solid #eee; }
+    .chat-input input { flex: 1; padding: 10px; border: none; font-size: 14px; outline: none; }
+    .chat-input button { background: #9333ea; color: white; border: none; padding: 0 16px; cursor: pointer; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <!-- === SECTION WELCOME === -->
+  <div class="welcome">
+    <h1 id="welcome-title"></h1>
+    <p id="welcome-message"></p>
+    <div class="search-bar">
+      <form id="searchForm">
+        <input type="text" id="searchInput" placeholder="" />
+      </form>
     </div>
+  </div>
 
-    <script>
-      const $ = (id) => document.getElementById(id);
-      $('send').onclick = async () => {
-        const message = $('msg').value.trim();
-        if (!message) return;
-        $('status').textContent = '⏳ Envoi…';
-        try {
-          const res = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, userId: 'test123', userName: 'Paul' })
-          });
-          const data = await res.json();
-          $('out').textContent = JSON.stringify(data, null, 2);
-          $('status').textContent = '✅ OK';
-        } catch (e) {
-          $('status').textContent = '❌ Erreur';
-          $('out').textContent = String(e);
-        }
-      };
-    </script>
-  </body>
+  <!-- === CHAT === -->
+  <div class="chat-toggle" id="chatToggle">💬</div>
+  <div class="chat-overlay" id="chatOverlay"></div>
+  <div class="chat-popup" id="chatPopup">
+    <div class="chat-header">
+      Assistant Obra <span class="chat-close" id="chatClose">✖</span>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Demandez à Obra..." />
+      <button id="sendBtn">➤</button>
+    </div>
+  </div>
+
+  <script>
+    const clientName = "Paul";
+    const clientData = { projets: 3, notifications: 5 };
+    const jours = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+    const today = new Date();
+    const jour = jours[today.getDay()];
+
+    document.getElementById("welcome-title").innerHTML =
+      `Bienvenue sur <span style="color:#9333ea;">Obra,</span> ${clientName} 👋 <span class="pro-badge">PRO</span>`;
+    document.getElementById("welcome-message").innerHTML =
+      `Bon ${jour}, vous avez <strong>${clientData.projets} projets en cours</strong> et 
+       <strong>${clientData.notifications} nouvelles notifications</strong>.`;
+
+    const toggle = document.getElementById("chatToggle");
+    const popup = document.getElementById("chatPopup");
+    const overlay = document.getElementById("chatOverlay");
+    const closeBtn = document.getElementById("chatClose");
+    const messages = document.getElementById("chatMessages");
+    const inputChat = document.getElementById("chatInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const searchForm = document.getElementById("searchForm");
+    const searchInput = document.getElementById("searchInput");
+
+    function openChat() {
+      popup.classList.add("active");
+      overlay.classList.add("active");
+      setTimeout(() => inputChat.focus(), 300);
+
+      if (!popup.dataset.greeted) {
+        addMessage(`Bonjour ${clientName}, en quoi puis-je vous aider aujourd'hui ?`, "ai");
+        popup.dataset.greeted = "true";
+      }
+    }
+    function closeChat() {
+      popup.classList.remove("active");
+      overlay.classList.remove("active");
+    }
+    toggle.addEventListener("click", () => popup.classList.contains("active") ? closeChat() : openChat());
+    overlay.addEventListener("click", closeChat);
+    closeBtn.addEventListener("click", closeChat);
+
+    function addMessage(text, sender) {
+      const wrapper = document.createElement("div");
+      wrapper.classList.add("message-wrapper", sender);
+      if (sender === "ai") {
+        const avatar = document.createElement("div");
+        avatar.classList.add("message-avatar");
+        avatar.textContent = "🤖";
+        wrapper.appendChild(avatar);
+      }
+      const bubble = document.createElement("div");
+      bubble.classList.add("message", sender);
+      bubble.textContent = text;
+      const time = document.createElement("span");
+      time.classList.add("timestamp");
+      const now = new Date();
+      time.textContent = now.getHours().toString().padStart(2,"0")+":"+now.getMinutes().toString().padStart(2,"0");
+      bubble.appendChild(time);
+      wrapper.appendChild(bubble);
+      messages.appendChild(wrapper);
+      wrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+
+    async function getAIResponse(userMsg) {
+      try {
+        const res = await fetch("/api/chat", { // chemin relatif = bon domaine
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: userMsg })
+        });
+        const data = await res.json();
+        return data.reply || "❌ Pas de réponse reçue.";
+      } catch (err) {
+        return "❌ Erreur de connexion avec l’assistant.";
+      }
+    }
+
+    async function sendMessage(text) {
+      if (text.trim() === "") return;
+      addMessage(text, "user");
+      const reply = await getAIResponse(text);
+      addMessage(reply, "ai");
+    }
+    sendBtn.addEventListener("click", () => {
+      if (inputChat.value.trim() !== "") {
+        sendMessage(inputChat.value.trim());
+        inputChat.value = "";
+      }
+    });
+    inputChat.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && inputChat.value.trim() !== "") {
+        sendMessage(inputChat.value.trim());
+        inputChat.value = "";
+      }
+    });
+
+    searchForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (searchInput.value.trim() !== "") {
+        const msg = searchInput.value.trim();
+        searchInput.value = "";
+        searchInput.blur();
+        openChat();
+        sendMessage(msg);
+      }
+    });
+  </script>
+</body>
 </html>
