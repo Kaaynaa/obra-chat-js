@@ -1,4 +1,5 @@
 export default async function handler(req, res) {
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -7,14 +8,15 @@ export default async function handler(req, res) {
 
   if (req.method === "POST") {
     try {
-      const { message, userId, userName } = req.body;
+      const { message, userId, userName } = req.body || {};
 
       const payload = {
         channel: "obra_chat",
         user: { id: userId || "anon", name: userName || "Anonyme" },
-        message: { type: "text", text: message }
+        message: { type: "text", text: message || "" }
       };
 
+      // 👉 TON WEBHOOK N8N (PATH EN MINUSCULES)
       const response = await fetch("https://n8n.srv586629.hstgr.cloud/webhook/obra/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -22,15 +24,14 @@ export default async function handler(req, res) {
       });
 
       if (!response.ok) {
-        return res.status(500).json({ reply: `❌ N8N erreur HTTP ${response.status}` });
+        return res.status(500).json({
+          reply: `❌ N8N erreur HTTP ${response.status} ${response.statusText}`
+        });
       }
 
       let data;
-      try {
-        data = await response.json();
-      } catch {
-        return res.status(500).json({ reply: "❌ Réponse N8N invalide (pas JSON)" });
-      }
+      try { data = await response.json(); }
+      catch { return res.status(500).json({ reply: "❌ Réponse N8N invalide (pas JSON)" }); }
 
       return res.status(200).json({
         reply: data.reply || "❌ Pas de réponse reçue de N8N.",
@@ -38,8 +39,7 @@ export default async function handler(req, res) {
         status: data.status || "ok"
       });
     } catch (err) {
-      console.error("Error /api/chat:", err);
-      return res.status(500).json({ reply: "❌ Erreur serveur Obra API", error: err.message });
+      return res.status(500).json({ reply: "❌ Erreur serveur Obra API", error: String(err) });
     }
   }
 
