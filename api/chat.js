@@ -11,14 +11,14 @@ export default async function handler(req, res) {
     try {
       const { message, userId, userName } = req.body || {};
 
-      // Construire le payload pour N8N
+      // Payload envoyé à N8N
       const payload = {
         channel: "obra_chat",
         user: { id: userId || "anon", name: userName || "Anonyme" },
         message: { type: "text", text: message }
       };
 
-      // Appel vers le webhook N8N
+      // Envoi vers ton webhook N8N
       const response = await fetch("https://n8n.srv586629.hstgr.cloud/webhook/obra/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
