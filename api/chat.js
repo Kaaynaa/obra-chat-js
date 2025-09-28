@@ -9,12 +9,14 @@ export default async function handler(req, res) {
     try {
       const { message, userId, userName } = req.body || {};
 
+      // Payload envoyé à N8N
       const payload = {
         channel: "obra_chat",
         user: { id: userId || "anon", name: userName || "Anonyme" },
         message: { type: "text", text: message || "" }
       };
 
+      // Appel à ton webhook N8N
       const response = await fetch("https://n8n.srv586629.hstgr.cloud/webhook/obra/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -31,6 +33,7 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
 
     } catch (err) {
+      console.error("Erreur dans /api/chat:", err);
       return res.status(500).json({ reply: "❌ Erreur serveur Obra API", error: String(err) });
     }
   }
