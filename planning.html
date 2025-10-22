@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planning - Obra</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background: #FAFAFA;
+font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", sans-serif;
+color: #000000;
+padding: 15px 20px;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+overflow-x: hidden;
+}
+
+.container {
+max-width: 1600px;
+margin: 0 auto;
+}
+
+.back-btn {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+padding: 10px 20px;
+background: #FFFFFF;
+border: none;
+border-radius: 10px;
+font-size: 14px;
+font-weight: 600;
+color: #000;
+text-decoration: none;
+transition: all 0.3s;
+margin-bottom: 20px;
+cursor: pointer;
+position: relative;
+user-select: none;
+}
+
+.back-btn::before {
+content: '';
+position: absolute;
+inset: -2px;
+border-radius: 10px;
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+z-index: -1;
+}
+
+.back-btn::after {
+content: '';
+position: absolute;
+inset: 0;
+border-radius: 8px;
+background: #FFFFFF;
+z-index: -1;
+}
+
+.back-btn svg {
+width: 18px;
+height: 18px;
+stroke: url(#gradient-stroke);
+flex-shrink: 0;
+}
+
+.back-btn:hover {
+transform: translateY(-2px) translateX(-3px);
+box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3);
+}
+
+.page-header {
+margin-top: 10px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 24px;
+flex-wrap: wrap;
+gap: 20px;
+}
+
+.page-title-section h1 {
+font-size: 28px;
+font-weight: 700;
+color: #000;
+margin-bottom: 6px;
+letter-spacing: -0.03em;
+}
+
+.page-title-section p {
+font-size: 14px;
+color: #666;
+font-weight: 400;
+}
+
+.add-rdv-btn {
+padding: 14px 32px;
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+border: none;
+border-radius: 12px;
+font-size: 15px;
+font-weight: 600;
+color: #fff;
+cursor: pointer;
+transition: all 0.3s;
+display: flex;
+align-items: center;
+gap: 10px;
+box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+user-select: none;
+}
+
+.add-rdv-btn:hover {
+transform: translateY(-3px);
+box-shadow: 0 8px 32px rgba(0, 122, 255, 0.5);
+}
+
+.add-rdv-btn svg {
+width: 18px;
+height: 18px;
+stroke: #fff;
+}
+
+.stats-row {
+margin-bottom: 15px;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 30px;
+flex-wrap: wrap;
+padding: 0;
+}
+
+.stat-item {
+display: flex;
+flex-direction: column;
+gap: 2px;
+align-items: center;
+}
+
+.stat-value {
+font-size: 32px;
+font-weight: 700;
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+letter-spacing: -0.02em;
+}
+
+.stat-label {
+font-size: 11px;
+color: #666;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.05em;
+}
+
+.stat-separator {
+width: 1px;
+height: 32px;
+background: #E0E0E0;
+}
+
+.view-toggle-section {
+display: flex;
+justify-content: center;
+margin-bottom: 15px;
+}
+
+.view-toggle {
+display: inline-flex;
+background: #FFFFFF;
+border: 2px solid #F0F0F0;
+border-radius: 12px;
+padding: 4px;
+gap: 4px;
+}
+
+.view-toggle-btn {
+padding: 10px 20px;
+background: transparent;
+border: none;
+border-radius: 8px;
+font-size: 15px;
+font-weight: 600;
+color: #666;
+cursor: pointer;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+display: flex;
+align-items: center;
+gap: 8px;
+user-select: none;
+}
+
+.view-toggle-btn svg {
+width: 16px;
+height: 16px;
+stroke: #666;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.view-toggle-btn.active {
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+color: #fff;
+box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+transform: translateY(-1px);
+}
+
+.view-toggle-btn.active svg {
+stroke: #fff;
+}
+
+.view-toggle-btn:hover:not(.active) {
+background: #FAFAFA;
+color: #000;
+transform: translateY(-1px);
+}
+
+.filters-section {
+background: #FFFFFF;
+border: 2px solid #F0F0F0;
+border-radius: 16px;
+padding: 16px;
+margin-bottom: 20px;
+}
+
+.filters-row {
+display: flex;
+gap: 10px;
+flex-wrap: wrap;
+}
+
+.filter-chip {
+padding: 10px 20px;
+background: #FAFAFA;
+border: 2px solid #F0F0F0;
+border-radius: 20px;
+font-size: 15px;
+font-weight: 600;
+color: #666;
+cursor: pointer;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+display: flex;
+align-items: center;
+gap: 8px;
+user-select: none;
+}
+
+.filter-chip svg {
+width: 16px;
+height: 16px;
+stroke: url(#gradient-stroke);
+flex-shrink: 0;
+}
+
+.filter-chip:hover {
+background: #F5F5F5;
+border-color: #E0E0E0;
+transform: translateY(-1px);
+}
+
+.filter-chip.active {
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+color: #fff;
+border: 2px solid transparent;
+box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+background-clip: padding-box;
+transform: translateY(-1px);
+}
+
+.filter-chip.active svg {
+stroke: #fff;
+}
+
+.filter-chip .count {
+background: rgba(255, 255, 255, 0.3);
+padding: 3px 8px;
+border-radius: 10px;
+font-size: 13px;
+}
+
+.filter-chip:not(.active) .count {
+background: #E8E8E8;
+color: #666;
+}
+
+.planning-grid {
+display: grid;
+grid-template-columns: 1fr 320px;
+gap: 15px;
+margin-bottom: 0px;
+align-items: start;
+}
+
+.rdv-modal {
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: rgba(0, 0, 0, 0.5);
+z-index: 1000;
+align-items: center;
+justify-content: center;
+backdrop-filter: blur(4px);
+animation: fadeIn 0.3s ease;
+}
+
+.rdv-modal.active {
+display: flex;
+}
+
+.rdv-modal-content {
+background: #FFFFFF;
+border-radius: 20px;
+padding: 32px;
+max-width: 600px;
+width: 92%;
+max-height: 90vh;
+overflow-y: auto;
+position: relative;
+box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+animation: slideUp 0.3s ease;
+display: flex;
+flex-direction: column;
+border: 2px solid transparent;
+background-image: linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(135deg, rgba(0, 122, 255, 0.15), rgba(255, 59, 48, 0.15));
+background-origin: border-box;
+background-clip: padding-box, border-box;
+}
+
+.rdv-modal-content::-webkit-scrollbar {
+width: 4px;
+}
+
+.rdv-modal-content::-webkit-scrollbar-track {
+background: transparent;
+margin: 10px 0;
+}
+
+.rdv-modal-content::-webkit-scrollbar-thumb {
+background: rgba(0, 0, 0, 0.12);
+border-radius: 10px;
+transition: background 0.3s ease;
+}
+
+.rdv-modal-content::-webkit-scrollbar-thumb:hover {
+background: rgba(0, 0, 0, 0.25);
+}
+
+@keyframes fadeIn {
+from { opacity: 0; }
+to { opacity: 1; }
+}
+
+@keyframes slideUp {
+from {
+opacity: 0;
+transform: translateY(30px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+.rdv-modal-close {
+position: absolute;
+top: 20px;
+right: 20px;
+width: 32px;
+height: 32px;
+background: #FAFAFA;
+border: 2px solid #F0F0F0;
+border-radius: 10px;
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+transition: all 0.3s;
+user-select: none;
+}
+
+.rdv-modal-close:hover {
+background: #FF3B30;
+border-color: #FF3B30;
+transform: rotate(90deg);
+}
+
+.rdv-modal-close:hover svg {
+stroke: #fff;
+}
+
+.rdv-modal-close svg {
+width: 18px;
+height: 18px;
+stroke: #666;
+transition: all 0.3s;
+}
+
+.rdv-modal-header {
+margin-bottom: 24px;
+padding-right: 40px;
+}
+
+.rdv-modal-title {
+font-size: 24px;
+font-weight: 700;
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+margin-bottom: 6px;
+}
+
+.rdv-modal-subtitle {
+font-size: 14px;
+color: #666;
+}
+
+.rdv-modal-badge {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+padding: 6px 14px;
+border-radius: 8px;
+font-size: 12px;
+font-weight: 600;
+margin-top: 8px;
+}
+
+.rdv-modal-badge::before {
+content: '';
+display: inline-block;
+width: 6px;
+height: 6px;
+border-radius: 50%;
+background: currentColor;
+}
+
+.rdv-modal-badge.type-devis {
+background: rgba(0, 122, 255, 0.1);
+color: #007AFF;
+}
+
+.rdv-modal-badge.type-installation {
+background: rgba(52, 199, 89, 0.1);
+color: #34C759;
+}
+
+.rdv-modal-badge.type-maintenance {
+background: rgba(255, 149, 0, 0.1);
+color: #FF9500;
+}
+
+.rdv-modal-badge.type-urgence {
+background: rgba(255, 59, 48, 0.1);
+color: #FF3B30;
+}
+
+.rdv-modal-badge.type-conge {
+background: rgba(102, 102, 102, 0.1);
+color: #666;
+}
+
+.rdv-modal-section {
+margin-bottom: 20px;
+transition: all 0.3s ease;
+}
+
+.rdv-modal-section:last-of-type {
+margin-bottom: 0;
+}
+
+#motifField {
+animation: slideInDown 0.3s ease;
+}
+
+@keyframes slideInDown {
+from {
+opacity: 0;
+transform: translateY(-20px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+.rdv-modal-section-title {
+font-size: 12px;
+font-weight: 700;
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+text-transform: uppercase;
+letter-spacing: 0.08em;
+margin-bottom: 10px;
+}
+
+.rdv-modal-info {
+background: #FAFAFA;
+border: 2px solid #F0F0F0;
+border-radius: 12px;
+padding: 14px;
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 12px;
+}
+
+.rdv-modal-info-row {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.rdv-modal-info-icon {
+width: 32px;
+height: 32px;
+background: #FFFFFF;
+border: 2px solid #F0F0F0;
+border-radius: 10px;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+}
+
+.rdv-modal-info-icon svg {
+width: 18px;
+height: 18px;
+stroke: url(#gradient-stroke);
+}
+
+.rdv-modal-info-text {
+flex: 1;
+}
+
+.rdv-modal-info-label {
+font-size: 10px;
+color: #666;
+margin-bottom: 2px;
+text-transform: uppercase;
+letter-spacing: 0.03em;
+}
+
+.rdv-modal-info-value {
+font-size: 14px;
+font-weight: 600;
+color: #000;
+}
+
+.rdv-modal-description {
+background: #FAFAFA;
+border: 2px solid #F0F0F0;
+border-radius: 12px;
+padding: 14px;
+font-size: 14px;
+line-height: 1.6;
+color: #333;
+}
+
+.rdv-modal-actions {
+display: flex;
+gap: 10px;
+margin-top: 24px;
+padding-top: 4px;
+}
+
+.rdv-modal-btn {
+flex: 1;
+padding: 12px;
+border: none;
+border-radius: 12px;
+font-size: 14px;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.3s;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+user-select: none;
+}
+
+.rdv-modal-btn-primary {
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+color: #fff;
+box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+}
+
+.rdv-modal-btn-primary:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 24px rgba(0, 122, 255, 0.4);
+}
+
+.rdv-modal-btn-secondary {
+background: #FAFAFA;
+color: #000;
+border: 2px solid #F0F0F0;
+}
+
+.rdv-modal-btn-secondary:hover {
+background: #F0F0F0;
+}
+
+.rdv-modal-btn svg {
+width: 16px;
+height: 16px;
+}
+
+.modal-btn-danger {
+background: #FAFAFA;
+color: #FF3B30;
+border: 2px solid #F0F0F0;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-btn-danger:hover {
+background: linear-gradient(135deg, #FF3B30, #FF6259);
+color: #fff;
+border-color: #FF3B30;
+transform: translateY(-2px);
+box-shadow: 0 6px 24px rgba(255, 59, 48, 0.4);
+}
+
+.modal-btn-danger svg {
+stroke: currentColor;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.type-selector {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 12px;
+}
+
+@media(max-width: 768px) {
+.type-selector {
+grid-template-columns: repeat(2, 1fr);
+}
+}
+
+.type-option.type-conge {
+border-color: #E0E0E0;
+}
+
+.type-option.type-conge.selected {
+background: rgba(102, 102, 102, 0.1);
+border-color: #666;
+}
+
+.type-option.type-conge.selected svg {
+stroke: #666;
+}
+
+.type-option.type-conge.selected span {
+color: #666;
+}
+
+.type-option {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 10px;
+padding: 18px 12px;
+background: #FAFAFA;
+border: 2px solid #F0F0F0;
+border-radius: 12px;
+cursor: pointer;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+user-select: none;
+min-height: 95px;
+}
+
+.type-option:hover {
+background: #FFFFFF;
+border-color: #E0E0E0;
+transform: translateY(-2px);
+}
+
+.type-option.selected {
+background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(255, 59, 48, 0.1));
+border-color: #007AFF;
+transform: translateY(-2px);
+}
+
+.type-option svg {
+width: 24px;
+height: 24px;
+stroke: #666;
+transition: all 0.3s;
+}
+
+.type-option.selected svg {
+stroke: url(#gradient-stroke);
+}
+
+.type-option span {
+font-size: 12px;
+font-weight: 600;
+color: #666;
+transition: all 0.3s;
+text-align: center;
+line-height: 1.3;
+}
+
+.type-option.selected span {
+color: #007AFF;
+}
+
+.form-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+gap: 14px;
+}
+
+.form-group {
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+
+.form-group label {
+font-size: 12px;
+font-weight: 600;
+color: #666;
+text-transform: uppercase;
+letter-spacing: 0.05em;
+}
+
+.form-group input,
+.form-group textarea {
+padding: 12px 16px;
+background: #FAFAFA;
+border: 2px solid #F0F0F0;
+border-radius: 10px;
+font-size: 14px;
+font-family: inherit;
+color: #000;
+transition: all 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+outline: none;
+background: #FFFFFF;
+border-color: #007AFF;
+box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.form-group textarea {
+resize: vertical;
+min-height: 80px;
+}
+
+.calendar-card {
+background: #FFFFFF;
+border: 2px solid transparent;
+background-image: linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(255, 59, 48, 0.1));
+background-origin: border-box;
+background-clip: padding-box, border-box;
+border-radius: 16px;
+padding: 24px;
+opacity: 0;
+transform: translateY(20px);
+transition: opacity 0.4s ease, transform 0.4s ease;
+max-height: 700px;
+overflow-y: auto;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+}
+
+.calendar-card:hover {
+box-shadow: 0 12px 48px rgba(0, 122, 255, 0.08);
+}
+
+.calendar-card::-webkit-scrollbar {
+width: 4px;
+}
+
+.calendar-card::-webkit-scrollbar-track {
+background: transparent;
+margin: 10px 0;
+}
+
+.calendar-card::-webkit-scrollbar-thumb {
+background: rgba(0, 0, 0, 0.12);
+border-radius: 10px;
+transition: background 0.3s ease;
+}
+
+.calendar-card::-webkit-scrollbar-thumb:hover {
+background: rgba(0, 0, 0, 0.25);
+}
+
+.calendar-card.active {
+animation: fadeInUp 0.4s ease forwards;
+}
+
+#week-view.active,
+#day-view.active {
+opacity: 1;
+transform: translateY(0);
+}
+
+.calendar-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 20px;
+gap: 15px;
+flex-wrap: wrap;
+}
+
+.calendar-title {
+font-size: 20px;
+font-weight: 700;
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.calendar-selectors {
+display: flex;
+gap: 10px;
+position: relative;
+}
+
+.calendar-dropdown {
+position: relative;
+min-width: 140px;
+}
+
+.calendar-dropdown-trigger {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 12px;
+padding: 10px 16px;
+border: 2px solid #F0F0F0;
+border-radius: 12px;
+font-size: 15px;
+font-weight: 600;
+background: #FFFFFF;
+color: #000;
+cursor: pointer;
+transition: all 0.3s;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+user-select: none;
+}
+
+.calendar-dropdown-trigger:hover {
+border-color: #007AFF;
+background: #FAFAFA;
+}
+
+.calendar-dropdown-trigger.active {
+border-color: #007AFF;
+box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.calendar-dropdown-icon {
+width: 14px;
+height: 14px;
+transition: transform 0.3s;
+stroke: #666;
+}
+
+.calendar-dropdown-trigger.active .calendar-dropdown-icon {
+transform: rotate(180deg);
+}
+
+.calendar-dropdown-menu {
+position: absolute;
+top: calc(100% + 8px);
+left: 0;
+right: 0;
+background: #FFFFFF;
+border: 2px solid #F0F0F0;
+border-radius: 12px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+opacity: 0;
+visibility: hidden;
+transform: translateY(-10px);
+transition: all 0.3s;
+z-index: 1000;
+overflow: hidden;
+max-height: 300px;
+overflow-y: auto;
+}
+
+.calendar-dropdown-menu::-webkit-scrollbar {
+width: 3px;
+}
+
+.calendar-dropdown-menu::-webkit-scrollbar-track {
+background: transparent;
+}
+
+.calendar-dropdown-menu::-webkit-scrollbar-thumb {
+background: rgba(0, 0, 0, 0.12);
+border-radius: 10px;
+}
+
+.calendar-dropdown-menu::-webkit-scrollbar-thumb:hover {
+background: rgba(0, 0, 0, 0.25);
+}
+
+.calendar-dropdown-menu.active {
+opacity: 1;
+visibility: visible;
+transform: translateY(0);
+}
+
+.calendar-dropdown-item {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 12px;
+padding: 12px 16px;
+font-size: 14px;
+font-weight: 600;
+color: #000;
+cursor: pointer;
+transition: all 0.2s;
+border-bottom: 1px solid #F5F5F5;
+}
+
+.calendar-dropdown-item:last-child {
+border-bottom: none;
+}
+
+.calendar-dropdown-item:hover {
+background: linear-gradient(135deg, rgba(0, 122, 255, 0.05), rgba(255, 59, 48, 0.05));
+}
+
+.calendar-dropdown-item.selected {
+background: linear-gradient(135deg, rgba(0, 122, 255, 0.08), rgba(255, 59, 48, 0.08));
+color: #007AFF;
+}
+
+.calendar-dropdown-check {
+width: 14px;
+height: 14px;
+stroke: #007AFF;
+opacity: 0;
+stroke-width: 2.5;
+}
+
+.calendar-dropdown-item.selected .calendar-dropdown-check {
+opacity: 1;
+}
+
+.calendar-nav {
+display: flex;
+gap: 12px;
+}
+
+.calendar-nav-btn {
+width: 40px;
+height: 40px;
+background: #FAFAFA;
+border: 2px solid #F0F0F0;
+border-radius: 10px;
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+position: relative;
+overflow: hidden;
+user-select: none;
+}
+
+.calendar-nav-btn::before {
+content: '';
+position: absolute;
+inset: 0;
+background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(255, 59, 48, 0.1));
+opacity: 0;
+transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+border-radius: 8px;
+}
+
+.calendar-nav-btn:hover {
+border-color: #007AFF;
+background: #FFFFFF;
+transform: translateY(-2px) scale(1.05);
+box-shadow: 0 4px 12px rgba(0, 122, 255, 0.15);
+}
+
+.calendar-nav-btn:hover::before {
+opacity: 1;
+}
+
+.calendar-nav-btn:active {
+transform: translateY(0) scale(0.98);
+transition: all 0.1s;
+}
+
+.calendar-nav-btn svg {
+width: 20px;
+height: 20px;
+stroke: url(#gradient-stroke);
+transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+position: relative;
+z-index: 1;
+}
+
+.calendar-nav-btn:hover svg {
+transform: scale(1.1);
+}
+
+.calendar-weekdays {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 8px;
+margin-bottom: 12px;
+}
+
+.calendar-weekday {
+text-align: center;
+font-size: 12px;
+font-weight: 700;
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+text-transform: uppercase;
+letter-spacing: 0.08em;
+padding: 8px;
+}
+
+.calendar-days {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 8px;
+}
+
+.calendar-day {
+aspect-ratio: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 8px;
+border-radius: 12px;
+cursor: pointer;
+transition: all 0.3s;
+position: relative;
+background: #FAFAFA;
+border: 2px solid transparent;
+user-select: none;
+}
+
+.calendar-day.drag-over {
+background: linear-gradient(135deg, rgba(0, 122, 255, 0.2), rgba(255, 59, 48, 0.2));
+border: 2px dashed #007AFF;
+transform: scale(1.05);
+box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+}
+
+.calendar-day-add {
+position: absolute;
+top: 3px;
+right: 3px;
+width: 26px;
+height: 26px;
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+border-radius: 8px;
+display: none;
+align-items: center;
+justify-content: center;
+opacity: 0;
+transform: scale(0.7);
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+z-index: 100;
+box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+cursor: pointer;
+}
+
+.calendar-day-add svg {
+width: 16px;
+height: 16px;
+stroke: #fff;
+stroke-width: 2.5;
+}
+
+.calendar-day:not(.other-month):hover .calendar-day-add {
+display: flex;
+opacity: 1;
+transform: scale(1);
+}
+
+.calendar-day.selected .calendar-day-add {
+display: flex !important;
+opacity: 1 !important;
+background: #FFFFFF !important;
+box-shadow: 0 4px 16px rgba(255, 255, 255, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
+}
+
+.calendar-day.selected .calendar-day-add svg {
+stroke: url(#gradient-stroke) !important;
+}
+
+.calendar-day-add:hover {
+transform: scale(1.2) rotate(90deg);
+box-shadow: 0 6px 16px rgba(0, 122, 255, 0.5);
+}
+
+.calendar-day:not(.other-month):hover:not(.selected) {
+background: #FFFFFF;
+border-color: #E0E0E0;
+transform: translateY(-2px);
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.calendar-day.today {
+background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(255, 59, 48, 0.1));
+border-color: #007AFF;
+font-weight: 700;
+}
+
+.calendar-day.selected {
+background: linear-gradient(135deg, #007AFF, #FF3B30) !important;
+color: #fff !important;
+font-weight: 700;
+border-color: transparent !important;
+transform: scale(1.05) !important;
+box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4) !important;
+}
+
+.calendar-day.selected .calendar-day-number {
+color: #fff;
+font-size: 16px;
+}
+
+.calendar-day.selected .calendar-day-dot {
+background: #fff !important;
+box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.calendar-day.other-month {
+opacity: 0.3;
+pointer-events: none;
+}
+
+.calendar-day-number {
+font-size: 14px;
+font-weight: 600;
+margin-bottom: 4px;
+position: relative;
+z-index: 1;
+}
+
+.calendar-day-dots {
+display: flex;
+gap: 3px;
+position: relative;
+z-index: 2;
+}
+
+.calendar-day-dot {
+width: 7px;
+height: 7px;
+border-radius: 50%;
+transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-day-dot.hidden {
+opacity: 0;
+transform: scale(0);
+}
+
+.calendar-day-dot.visible {
+opacity: 1;
+transform: scale(1);
+animation: popIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes popIn {
+0% {
+opacity: 0;
+transform: scale(0) rotate(0deg);
+}
+50% {
+transform: scale(1.3) rotate(180deg);
+}
+100% {
+opacity: 1;
+transform: scale(1) rotate(360deg);
+}
+}
+
+.dot-devis { background: #007AFF; }
+.dot-installation { background: #34C759; }
+.dot-maintenance { background: #FF9500; }
+.dot-urgence { background: #FF3B30; }
+.dot-conge { background: linear-gradient(135deg, #666, #999); }
+
+/* Week View Styles */
+.week-grid {
+display: grid;
+grid-template-columns: 80px repeat(7, 1fr);
+gap: 8px;
+}
+
+.week-time-label {
+text-align: right;
+padding: 12px 8px;
+font-size: 11px;
+font-weight: 600;
+color: #666;
+border-right: 2px solid #F0F0F0;
+}
+
+.week-day-column {
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+.week-day-header {
+text-align: center;
+padding: 12px 8px;
+font-size: 13px;
+font-weight: 700;
+background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(255, 59, 48, 0.1));
+border-radius: 8px;
+margin-bottom: 8px;
+}
+
+.week-day-header.today {
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+color: #fff;
+}
+
+.week-time-slot {
+min-height: 60px;
+background: #FAFAFA;
+border: 2px solid #F0F0F0;
+border-radius: 8px;
+padding: 8px;
+cursor: pointer;
+transition: all 0.3s;
+position: relative;
+}
+
+.week-time-slot:hover {
+background: #FFFFFF;
+border-color: #007AFF;
+transform: translateY(-1px);
+box-shadow: 0 2px 8px rgba(0, 122, 255, 0.1);
+}
+
+.week-rdv-item {
+background: #FFFFFF;
+border-left: 4px solid #007AFF;
+border-radius: 8px;
+padding: 8px;
+margin-bottom: 4px;
+cursor: pointer;
+transition: all 0.3s;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.week-rdv-item:hover {
+transform: translateX(2px);
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.week-rdv-item.type-installation {
+border-left-color: #34C759;
+}
+
+.week-rdv-item.type-maintenance {
+border-left-color: #FF9500;
+}
+
+.week-rdv-item.type-urgence {
+border-left-color: #FF3B30;
+}
+
+.week-rdv-item.type-conge {
+border-left-color: #666;
+}
+
+.week-rdv-time {
+font-size: 11px;
+font-weight: 700;
+color: #000;
+margin-bottom: 2px;
+}
+
+.week-rdv-client {
+font-size: 12px;
+font-weight: 600;
+color: #333;
+}
+
+/* Day View Styles */
+.day-view-container {
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
+
+.day-timeline {
+display: grid;
+grid-template-columns: 80px 1fr;
+gap: 12px;
+}
+
+.day-time-label {
+text-align: right;
+padding: 12px 8px;
+font-size: 12px;
+font-weight: 600;
+color: #666;
+}
+
+.day-events-column {
+position: relative;
+}
+
+.day-time-slot {
+min-height: 80px;
+background: #FAFAFA;
+border: 2px solid #F0F0F0;
+border-radius: 12px;
+padding: 12px;
+margin-bottom: 8px;
+cursor: pointer;
+transition: all 0.3s;
+position: relative;
+}
+
+.day-time-slot:hover {
+background: #FFFFFF;
+border-color: #007AFF;
+transform: translateX(4px);
+box-shadow: 0 4px 16px rgba(0, 122, 255, 0.15);
+}
+
+.day-rdv-item {
+background: #FFFFFF;
+border: 2px solid transparent;
+background-image: linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(135deg, rgba(0, 122, 255, 0.15), rgba(255, 59, 48, 0.15));
+background-origin: border-box;
+background-clip: padding-box, border-box;
+border-radius: 12px;
+padding: 16px;
+cursor: pointer;
+transition: all 0.3s;
+margin-bottom: 8px;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.day-rdv-item:hover {
+transform: translateX(4px);
+box-shadow: 0 6px 20px rgba(0, 122, 255, 0.2);
+}
+
+.day-rdv-header {
+display: flex;
+justify-content: space-between;
+align-items: start;
+margin-bottom: 12px;
+}
+
+.day-rdv-time {
+font-size: 16px;
+font-weight: 700;
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+}
+
+.day-rdv-badge {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+padding: 4px 12px;
+border-radius: 8px;
+font-size: 11px;
+font-weight: 600;
+}
+
+.day-rdv-badge.type-devis {
+background: rgba(0, 122, 255, 0.1);
+color: #007AFF;
+}
+
+.day-rdv-badge.type-installation {
+background: rgba(52, 199, 89, 0.1);
+color: #34C759;
+}
+
+.day-rdv-badge.type-maintenance {
+background: rgba(255, 149, 0, 0.1);
+color: #FF9500;
+}
+
+.day-rdv-badge.type-urgence {
+background: rgba(255, 59, 48, 0.1);
+color: #FF3B30;
+}
+
+.day-rdv-client {
+font-size: 18px;
+font-weight: 700;
+color: #000;
+margin-bottom: 6px;
+}
+
+.day-rdv-description {
+font-size: 14px;
+color: #666;
+line-height: 1.5;
+}
+
+.rdv-card {
+background: #FFFFFF;
+border: 2px solid transparent;
+background-image: linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(255, 59, 48, 0.1));
+background-origin: border-box;
+background-clip: padding-box, border-box;
+border-radius: 16px;
+padding: 20px;
+max-height: 700px;
+overflow-y: auto;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rdv-card:hover {
+box-shadow: 0 12px 48px rgba(0, 122, 255, 0.08);
+}
+
+.rdv-card::-webkit-scrollbar {
+width: 4px;
+}
+
+.rdv-card::-webkit-scrollbar-track {
+background: transparent;
+margin: 10px 0;
+}
+
+.rdv-card::-webkit-scrollbar-thumb {
+background: rgba(0, 0, 0, 0.12);
+border-radius: 10px;
+transition: background 0.3s ease;
+}
+
+.rdv-card::-webkit-scrollbar-thumb:hover {
+background: rgba(0, 0, 0, 0.25);
+}
+
+.rdv-header {
+margin-bottom: 20px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 12px;
+}
+
+.block-btn {
+width: 40px;
+height: 40px;
+background: #FAFAFA;
+border: 2px solid #F0F0F0;
+border-radius: 10px;
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+transition: all 0.3s;
+flex-shrink: 0;
+}
+
+.block-btn:hover {
+background: linear-gradient(135deg, rgba(255, 59, 48, 0.1), rgba(255, 149, 0, 0.1));
+border-color: #FF3B30;
+transform: translateY(-2px);
+}
+
+.block-btn svg {
+width: 20px;
+height: 20px;
+stroke: url(#gradient-stroke);
+}
+
+.rdv-date {
+font-size: 18px;
+font-weight: 700;
+background: linear-gradient(135deg, #007AFF, #FF3B30);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+margin-bottom: 6px;
+}
+
+.rdv-count {
+font-size: 13px;
+color: #666;
+}
+
+.rdv-list {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+.rdv-item {
+background: #FAFAFA;
+border: 2px solid #F0F0F0;
+border-radius: 12px;
+padding: 14px;
+cursor: pointer;
+transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+position: relative;
+overflow: hidden;
+user-select: none;
+animation: fadeInItem 0.3s ease forwards;
+}
+
+.rdv-item.drag-ready {
+cursor: move;
+transform: scale(1.05);
+box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+border-color: #007AFF;
+}
+
+.rdv-item.dragging {
+opacity: 0.5;
+transform: rotate(5deg) scale(0.95);
+cursor: grabbing;
+}
+
+@keyframes fadeInItem {
+from {
+opacity: 0;
+transform: translateY(10px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+@keyframes fadeOutItem {
+from {
+opacity: 1;
+transform: translateY(0);
+}
+to {
+opacity: 0;
+transform: translateY(-10px);
+}
+}
+
+@keyframes fadeInUp {
+from {
+opacity: 0;
+transform: translateY(20px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+.rdv-item[style*="display: none"] {
+display: none !important;
+}
+
+.rdv-item::before {
+content: '';
+position: absolute;
+left: 0;
+top: 0;
+bottom: 0;
+width: 4px;
+}
+
+.rdv-item.type-devis::before { background: #007AFF; }
+.rdv-item.type-installation::before { background: #34C759; }
+.rdv-item.type-maintenance::before { background: #FF9500; }
+.rdv-item.type-urgence::before { background: #FF3B30; }
+.rdv-item.type-conge::before { background: #666; }
+
+.rdv-item:hover {
+background: #FFFFFF;
+border-color: #E0E0E0;
+transform: translateX(4px);
+box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.rdv-time {
+font-size: 15px;
+font-weight: 700;
+color: #000;
+margin-bottom: 6px;
+}
+
+.rdv-client {
+font-size: 14px;
+font-weight: 600;
+color: #000;
+margin-bottom: 6px;
+}
+
+.rdv-type {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+padding: 4px 10px;
+border-radius: 8px;
+font-size: 11px;
+font-weight: 600;
+}
+
+.rdv-type.type-devis {
+background: rgba(0, 122, 255, 0.1);
+color: #007AFF;
+}
+
+.rdv-type.type-installation {
+background: rgba(52, 199, 89, 0.1);
+color: #34C759;
+}
+
+.rdv-type.type-maintenance {
+background: rgba(255, 149, 0, 0.1);
+color: #FF9500;
+}
+
+.rdv-type.type-urgence {
+background: rgba(255, 59, 48, 0.1);
+color: #FF3B30;
+}
+
+.rdv-type.type-conge {
+background: rgba(102, 102, 102, 0.1);
+color: #666;
+}
+
+@media(max-width: 1200px) {
+.planning-grid {
+grid-template-columns: 1fr;
+}
+
+.rdv-card {
+max-height: 600px;
+}
+}
+
+@media(max-width: 768px) {
+.stats-row {
+flex-direction: column;
+gap: 20px;
+}
+
+.stat-separator {
+display: none;
+}
+
+.view-toggle-btn {
+padding: 10px 20px;
+font-size: 14px;
+}
+
+.week-grid {
+grid-template-columns: 60px 1fr;
+font-size: 12px;
+}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position: absolute;">
+  <defs>
+    <linearGradient id="gradient-stroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#007AFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF3B30;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="container">
+  <button class="back-btn" onclick="window.location.href='index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    <span>Retour au dashboard</span>
+  </button>
+
+  <div class="page-header">
+    <div class="page-title-section">
+      <h1>Planning</h1>
+      <p>Gérez tous vos rendez-vous et interventions</p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+      <button class="add-rdv-btn" onclick="showHistory()" style="background: linear-gradient(135deg, #666, #999);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        Historique
+      </button>
+      <button class="add-rdv-btn" onclick="openAddRdvModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Nouveau RDV
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-item">
+      <span class="stat-value" id="stat-week">12</span>
+      <span class="stat-label">Cette semaine</span>
+    </div>
+    <div class="stat-separator"></div>
+    <div class="stat-item">
+      <span class="stat-value" id="stat-month">48</span>
+      <span class="stat-label">Ce mois</span>
+    </div>
+    <div class="stat-separator"></div>
+    <div class="stat-item">
+      <span class="stat-value" id="stat-today">3</span>
+      <span class="stat-label">Aujourd'hui</span>
+    </div>
+    <div class="stat-separator"></div>
+    <div class="stat-item">
+      <span class="stat-value" id="stat-urgences">2</span>
+      <span class="stat-label">Urgences</span>
+    </div>
+  </div>
+
+  <div class="view-toggle-section">
+    <div class="view-toggle">
+      <button class="view-toggle-btn active" onclick="switchView('month')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        Mois
+      </button>
+      <button class="view-toggle-btn" onclick="switchView('week')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+          <line x1="9" y1="4" x2="9" y2="22"></line>
+          <line x1="15" y1="4" x2="15" y2="22"></line>
+        </svg>
+        Semaine
+      </button>
+      <button class="view-toggle-btn" onclick="switchView('day')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+        </svg>
+        Jour
+      </button>
+    </div>
+  </div>
+
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-chip active" onclick="filterByType('all', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span>Tous</span> <span class="count">48</span>
+      </div>
+      <div class="filter-chip" onclick="filterByType('devis', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+        </svg>
+        <span>Devis</span> <span class="count">18</span>
+      </div>
+      <div class="filter-chip" onclick="filterByType('installation', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+        </svg>
+        <span>Installation</span> <span class="count">15</span>
+      </div>
+      <div class="filter-chip" onclick="filterByType('maintenance', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"></path>
+        </svg>
+        <span>Maintenance</span> <span class="count">13</span>
+      </div>
+      <div class="filter-chip" onclick="filterByType('urgence', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span>Urgences</span> <span class="count">2</span>
+      </div>
+      <div class="filter-chip" onclick="filterByType('conge', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+        </svg>
+        <span>Jours bloqués</span> <span class="count">0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="planning-grid">
+    <!-- Month View -->
+    <div class="calendar-card" id="month-view">
+      <div class="calendar-header">
+        <div class="calendar-title">
+          <div class="calendar-selectors">
+            <div class="calendar-dropdown" id="monthDropdown">
+              <div class="calendar-dropdown-trigger" onclick="toggleMonthDropdown()">
+                <span id="monthDropdownText">Octobre</span>
+                <svg class="calendar-dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+              <div class="calendar-dropdown-menu" id="monthDropdownMenu">
+                <div class="calendar-dropdown-item" data-value="0" onclick="selectMonth(0, 'Janvier')">
+                  <span>Janvier</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="1" onclick="selectMonth(1, 'Février')">
+                  <span>Février</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="2" onclick="selectMonth(2, 'Mars')">
+                  <span>Mars</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="3" onclick="selectMonth(3, 'Avril')">
+                  <span>Avril</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="4" onclick="selectMonth(4, 'Mai')">
+                  <span>Mai</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="5" onclick="selectMonth(5, 'Juin')">
+                  <span>Juin</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="6" onclick="selectMonth(6, 'Juillet')">
+                  <span>Juillet</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="7" onclick="selectMonth(7, 'Août')">
+                  <span>Août</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="8" onclick="selectMonth(8, 'Septembre')">
+                  <span>Septembre</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item selected" data-value="9" onclick="selectMonth(9, 'Octobre')">
+                  <span>Octobre</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="10" onclick="selectMonth(10, 'Novembre')">
+                  <span>Novembre</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="11" onclick="selectMonth(11, 'Décembre')">
+                  <span>Décembre</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="calendar-dropdown" id="yearDropdown">
+              <div class="calendar-dropdown-trigger" onclick="toggleYearDropdown()">
+                <span id="yearDropdownText">2025</span>
+                <svg class="calendar-dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+              <div class="calendar-dropdown-menu" id="yearDropdownMenu">
+                <div class="calendar-dropdown-item selected" data-value="2025" onclick="selectYear(2025)">
+                  <span>2025</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="2026" onclick="selectYear(2026)">
+                  <span>2026</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="calendar-dropdown-item" data-value="2027" onclick="selectYear(2027)">
+                  <span>2027</span>
+                  <svg class="calendar-dropdown-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="calendar-nav">
+          <button class="calendar-nav-btn" onclick="navigateMonth(-1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <button class="calendar-nav-btn" onclick="navigateMonth(1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="calendar-weekdays">
+        <div class="calendar-weekday">Lun</div>
+        <div class="calendar-weekday">Mar</div>
+        <div class="calendar-weekday">Mer</div>
+        <div class="calendar-weekday">Jeu</div>
+        <div class="calendar-weekday">Ven</div>
+        <div class="calendar-weekday">Sam</div>
+        <div class="calendar-weekday">Dim</div>
+      </div>
+
+      <div class="calendar-days" id="calendar-days-container">
+      </div>
+    </div>
+
+    <!-- Week View -->
+    <div class="calendar-card" id="week-view" style="display: none; max-height: none;">
+      <div class="calendar-header">
+        <div class="calendar-title" id="week-title">Semaine du 14 au 20 Octobre 2025</div>
+        <div class="calendar-nav">
+          <button class="calendar-nav-btn" onclick="navigateWeek(-1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <button class="calendar-nav-btn" onclick="navigateWeek(1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="week-content"></div>
+    </div>
+
+    <!-- Day View -->
+    <div class="calendar-card" id="day-view" style="display: none; max-height: none;">
+      <div class="calendar-header">
+        <div class="calendar-title" id="day-title">Lundi 20 Octobre 2025</div>
+        <div class="calendar-nav">
+          <button class="calendar-nav-btn" onclick="navigateDay(-1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <button class="calendar-nav-btn" onclick="navigateDay(1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="day-content" class="day-view-container"></div>
+    </div>
+
+    <!-- RDV Panel -->
+    <div class="rdv-card">
+      <div class="rdv-header">
+        <div>
+          <div class="rdv-date">Lundi 20 Octobre 2025</div>
+          <div class="rdv-count">3 rendez-vous</div>
+        </div>
+        <button class="block-btn" onclick="blockDaySlot()" title="Bloquer ce créneau">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="rdv-list">
+        <div class="rdv-item type-devis" onclick="openRdvModal('devis')">
+          <div class="rdv-time">09:00 - 10:30</div>
+          <div class="rdv-client">Jean Dupont</div>
+          <span class="rdv-type type-devis">Devis cuisine</span>
+        </div>
+
+        <div class="rdv-item type-installation" onclick="openRdvModal('installation')">
+          <div class="rdv-time">14:00 - 17:00</div>
+          <div class="rdv-client">Marie Laurent</div>
+          <span class="rdv-type type-installation">Installation chauffage</span>
+        </div>
+
+        <div class="rdv-item type-urgence" onclick="openRdvModal('urgence')">
+          <div class="rdv-time">18:30 - 19:30</div>
+          <div class="rdv-client">Pierre Bernard</div>
+          <span class="rdv-type type-urgence">Dépannage urgent</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View RDV Modal -->
+<div class="rdv-modal" id="rdvModal">
+  <div class="rdv-modal-content">
+    <button class="rdv-modal-close" onclick="closeRdvModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <div class="rdv-modal-header">
+      <div class="rdv-modal-title" id="modalClient">Jean Dupont</div>
+      <div class="rdv-modal-subtitle" id="modalTime">Lundi 20 Octobre 2025 • 09:00 - 10:30</div>
+      <div class="rdv-modal-badge type-devis" id="modalBadge">
+        <span id="modalType">Devis cuisine</span>
+      </div>
+    </div>
+
+    <div class="rdv-modal-section">
+      <div class="rdv-modal-section-title">Informations</div>
+      <div class="rdv-modal-info">
+        <div class="rdv-modal-info-row">
+          <div class="rdv-modal-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+          </div>
+          <div class="rdv-modal-info-text">
+            <div class="rdv-modal-info-label">Adresse</div>
+            <div class="rdv-modal-info-value" id="modalAddress">42 Rue de la République, 75010 Paris</div>
+          </div>
+        </div>
+
+        <div class="rdv-modal-info-row">
+          <div class="rdv-modal-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <div class="rdv-modal-info-text">
+            <div class="rdv-modal-info-label">Téléphone</div>
+            <div class="rdv-modal-info-value" id="modalPhone">06 12 34 56 78</div>
+          </div>
+        </div>
+
+        <div class="rdv-modal-info-row">
+          <div class="rdv-modal-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div class="rdv-modal-info-text">
+            <div class="rdv-modal-info-label">Durée</div>
+            <div class="rdv-modal-info-value" id="modalDuration">1h30</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rdv-modal-section">
+      <div class="rdv-modal-section-title">Détails de l'intervention</div>
+      <div class="rdv-modal-description" id="modalDescription">
+        Installation complète d'une cuisine équipée avec pose de meubles hauts et bas, raccordement électrique et plomberie. Matériel fourni par le client.
+      </div>
+    </div>
+
+    <div class="rdv-modal-actions">
+      <button class="rdv-modal-btn rdv-modal-btn-secondary" onclick="closeRdvModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        Fermer
+      </button>
+      <button class="rdv-modal-btn modal-btn-danger" onclick="deleteRdv()" style="flex: 0.5;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
+      <button class="rdv-modal-btn rdv-modal-btn-primary" onclick="editRdv()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        Modifier
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit RDV Modal -->
+<div class="rdv-modal" id="addRdvModal">
+  <div class="rdv-modal-content">
+    <button class="rdv-modal-close" onclick="closeAddRdvModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <div class="rdv-modal-header">
+      <div class="rdv-modal-title" id="addRdvModalTitle">Nouveau rendez-vous</div>
+      <div class="rdv-modal-subtitle" id="addRdvModalSubtitle">Remplissez les informations du rendez-vous</div>
+    </div>
+
+    <form id="rdvForm">
+      <input type="hidden" id="rdvEditId" value="">
+      <input type="hidden" id="rdvType" value="devis">
+
+      <div class="rdv-modal-section">
+        <div class="rdv-modal-section-title">Type d'intervention</div>
+        <div class="type-selector">
+          <div class="type-option type-devis selected" onclick="selectType('devis', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+            </svg>
+            <span>Devis</span>
+          </div>
+          <div class="type-option type-installation" onclick="selectType('installation', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            </svg>
+            <span>Installation</span>
+          </div>
+          <div class="type-option type-maintenance" onclick="selectType('maintenance', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"></path>
+            </svg>
+            <span>Maintenance</span>
+          </div>
+          <div class="type-option type-urgence" onclick="selectType('urgence', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span>Urgence</span>
+          </div>
+          <div class="type-option type-conge" onclick="selectType('conge', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+            </svg>
+            <span>Bloquer<br>jour/heure</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rdv-modal-section" id="clientInfoSection">
+        <div class="rdv-modal-section-title">Informations client</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label id="clientLabel">Nom du client *</label>
+            <input type="text" id="rdvClient" placeholder="Ex: Jean Dupont" required>
+          </div>
+          <div class="form-group" id="phoneField">
+            <label>Téléphone</label>
+            <input type="tel" id="rdvPhone" placeholder="Ex: 06 12 34 56 78">
+          </div>
+        </div>
+        <div class="form-group" id="addressField">
+          <label>Adresse</label>
+          <input type="text" id="rdvAddress" placeholder="Ex: 42 Rue de la République, 75010 Paris">
+        </div>
+      </div>
+
+      <div class="rdv-modal-section">
+        <div class="rdv-modal-section-title">Date et heure</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date *</label>
+            <input type="date" id="rdvDate" required>
+          </div>
+          <div class="form-group">
+            <label>Heure *</label>
+            <input type="time" id="rdvTime" required>
+          </div>
+          <div class="form-group" id="durationField">
+            <label>Durée (heures)</label>
+            <input type="number" id="rdvDuration" step="0.5" min="0.5" max="8" value="1.5">
+          </div>
+        </div>
+      </div>
+
+      <div class="rdv-modal-section" id="descriptionSection">
+        <div class="rdv-modal-section-title">Description</div>
+        <div class="form-group">
+          <textarea id="rdvDescription" placeholder="Détails de l'intervention..." rows="4"></textarea>
+        </div>
+      </div>
+
+      <div class="rdv-modal-actions">
+        <button type="button" class="rdv-modal-btn rdv-modal-btn-secondary" onclick="closeAddRdvModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Annuler
+        </button>
+        <button type="submit" class="rdv-modal-btn rdv-modal-btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+          <span id="submitBtnText">Créer le RDV</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="lib/planning.js"></script>
+
+</body>
+</html>
