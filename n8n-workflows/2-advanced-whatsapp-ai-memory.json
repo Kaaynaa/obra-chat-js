@@ -1,0 +1,339 @@
+{
+  "name": "WhatsApp AI Agent - Advanced (with Memory)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-ai",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-whatsapp",
+      "name": "Webhook WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraire les informations du message WhatsApp\nconst body = $input.item.json.body;\n\nconst from = body.From || '';\nconst message = body.Body || '';\nconst senderName = body.ProfileName || 'Client';\nconst messageId = body.MessageSid || '';\n\n// Nettoyer le numéro de téléphone\nconst phoneNumber = from.replace('whatsapp:', '');\n\nreturn {\n  from: phoneNumber,\n  message: message,\n  senderName: senderName,\n  messageId: messageId,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "extract-message",
+      "name": "Extract Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT message_in, message_out, timestamp FROM whatsapp_conversations WHERE phone_number = '{{ $json.from }}' ORDER BY timestamp DESC LIMIT 5",
+        "options": {}
+      },
+      "id": "get-conversation-history",
+      "name": "Get Conversation History",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [650, 400],
+      "credentials": {
+        "postgres": {
+          "id": "3",
+          "name": "Postgres Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construire l'historique de conversation pour l'IA\nconst currentMessage = $('Extract Message').item.json.message;\nconst senderName = $('Extract Message').item.json.senderName;\nconst history = $input.all();\n\n// Créer le contexte de conversation\nlet conversationHistory = [];\n\n// Ajouter les messages précédents (dans l'ordre chronologique)\nif (history && history.length > 0) {\n  // Inverser pour avoir du plus ancien au plus récent\n  const sortedHistory = [...history].reverse();\n  \n  sortedHistory.forEach(item => {\n    if (item.json.message_in) {\n      conversationHistory.push({\n        role: 'user',\n        content: item.json.message_in\n      });\n    }\n    if (item.json.message_out) {\n      conversationHistory.push({\n        role: 'assistant',\n        content: item.json.message_out\n      });\n    }\n  });\n}\n\n// Ajouter le message actuel\nconversationHistory.push({\n  role: 'user',\n  content: currentMessage\n});\n\nreturn {\n  conversationHistory: conversationHistory,\n  currentMessage: currentMessage,\n  senderName: senderName,\n  contextSize: conversationHistory.length\n};"
+      },
+      "id": "build-context",
+      "name": "Build Conversation Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Détecter l'intention du message\nconst message = $('Extract Message').item.json.message.toLowerCase();\n\nlet intent = 'general';\nlet urgency = 'normal';\nlet category = 'question';\n\n// Détection des intentions\nif (message.includes('devis') || message.includes('prix') || message.includes('tarif') || message.includes('combien')) {\n  intent = 'demande_devis';\n  category = 'commercial';\n}\nelse if (message.includes('rendez-vous') || message.includes('rdv') || message.includes('disponibilité') || message.includes('quand')) {\n  intent = 'prise_rdv';\n  category = 'planning';\n}\nelse if (message.includes('urgent') || message.includes('panne') || message.includes('problème') || message.includes('dépannage')) {\n  intent = 'urgence';\n  urgency = 'high';\n  category = 'support';\n}\nelse if (message.includes('facture') || message.includes('paiement') || message.includes('régler')) {\n  intent = 'facturation';\n  category = 'comptabilite';\n}\nelse if (message.includes('merci') || message.includes('remercie')) {\n  intent = 'remerciement';\n  category = 'social';\n}\n\nreturn {\n  intent: intent,\n  urgency: urgency,\n  category: category,\n  originalMessage: $('Extract Message').item.json.message\n};"
+      },
+      "id": "detect-intent",
+      "name": "Detect Intent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 600]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-3-5-sonnet-20241022\",\n  \"max_tokens\": 1024,\n  \"system\": \"Tu es un assistant IA professionnel nommé Obra pour une entreprise artisanale.\\n\\nTon rôle:\\n- Répondre aux demandes de devis\\n- Gérer les prises de rendez-vous\\n- Répondre aux questions sur les services\\n- Assurer un suivi client professionnel\\n\\nTon style:\\n- Courtois et professionnel\\n- Concis (max 2-3 phrases)\\n- Utilise des emojis avec parcimonie (1-2 max)\\n- Tutoiement ou vouvoiement selon le ton du client\\n\\nActions spéciales:\\n- Si demande de devis : indique qu'un devis personnalisé sera préparé et envoyé sous 24h\\n- Si demande de RDV : propose 2-3 créneaux dans les 3 prochains jours\\n- Si urgence : indique qu'un technicien sera contacté rapidement\\n\\nClient actuel : {{ $('Extract Message').item.json.senderName }}\\nIntention détectée : {{ $('Detect Intent').item.json.intent }}\\nUrgence : {{ $('Detect Intent').item.json.urgency }}\",\n  \"messages\": {{ $json.conversationHistory }}\n}",
+        "options": {}
+      },
+      "id": "claude-ai",
+      "name": "Claude AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 400],
+      "credentials": {
+        "anthropicApi": {
+          "id": "4",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraire la réponse de Claude\nconst response = $input.item.json;\nconst aiResponse = response.content[0].text;\n\nreturn {\n  aiResponse: aiResponse,\n  model: response.model,\n  usage: response.usage\n};"
+      },
+      "id": "extract-ai-response",
+      "name": "Extract AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "urlEncoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "From",
+              "value": "whatsapp:{{ $env.TWILIO_WHATSAPP_NUMBER }}"
+            },
+            {
+              "name": "To",
+              "value": "whatsapp:{{ $('Extract Message').item.json.from }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.aiResponse }}"
+            }
+          ]
+        }
+      },
+      "id": "send-whatsapp",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 400],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "2",
+          "name": "Twilio Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "whatsapp_conversations",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone_number": "={{ $('Extract Message').item.json.from }}",
+            "sender_name": "={{ $('Extract Message').item.json.senderName }}",
+            "message_in": "={{ $('Extract Message').item.json.message }}",
+            "message_out": "={{ $('Extract AI Response').item.json.aiResponse }}",
+            "intent": "={{ $('Detect Intent').item.json.intent }}",
+            "urgency": "={{ $('Detect Intent').item.json.urgency }}",
+            "category": "={{ $('Detect Intent').item.json.category }}",
+            "timestamp": "={{ $('Extract Message').item.json.timestamp }}",
+            "ai_model": "={{ $('Extract AI Response').item.json.model }}"
+          }
+        }
+      },
+      "id": "save-conversation",
+      "name": "Save Conversation",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1450, 600],
+      "credentials": {
+        "postgres": {
+          "id": "3",
+          "name": "Postgres Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\", \"messageId\": $('Extract Message').item.json.messageId } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1650, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $('Detect Intent').item.json.urgency }}",
+              "operation": "equals",
+              "value2": "high"
+            }
+          ]
+        }
+      },
+      "id": "check-urgency",
+      "name": "Is Urgent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1450, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"🚨 MESSAGE URGENT WhatsApp\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"🚨 Message Urgent WhatsApp\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"fields\": [\n        {\n          \"type\": \"mrkdwn\",\n          \"text\": \"*Client:*\\n{{ $('Extract Message').item.json.senderName }}\"\n        },\n        {\n          \"type\": \"mrkdwn\",\n          \"text\": \"*Téléphone:*\\n{{ $('Extract Message').item.json.from }}\"\n        },\n        {\n          \"type\": \"mrkdwn\",\n          \"text\": \"*Message:*\\n{{ $('Extract Message').item.json.message }}\"\n        },\n        {\n          \"type\": \"mrkdwn\",\n          \"text\": \"*Réponse IA:*\\n{{ $('Extract AI Response').item.json.aiResponse }}\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "notify-urgent",
+      "name": "Notify Team (Slack)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1650, 900]
+    }
+  ],
+  "connections": {
+    "Webhook WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Extract Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Message": {
+      "main": [
+        [
+          {
+            "node": "Get Conversation History",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Detect Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Conversation History": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Conversation Context": {
+      "main": [
+        [
+          {
+            "node": "Claude AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Intent": {
+      "main": [
+        [
+          {
+            "node": "Check Urgency",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude AI": {
+      "main": [
+        [
+          {
+            "node": "Extract AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract AI Response": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Urgency": {
+      "main": [
+        [
+          {
+            "node": "Notify Team (Slack)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "2"
+}

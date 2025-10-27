@@ -1,0 +1,536 @@
+{
+  "name": "WhatsApp AI Agent - Business Functions (Devis, RDV, CRM)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-business",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-whatsapp",
+      "name": "Webhook WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body;\nconst from = body.From || '';\nconst message = body.Body || '';\nconst senderName = body.ProfileName || 'Client';\nconst phoneNumber = from.replace('whatsapp:', '');\n\nreturn {\n  from: phoneNumber,\n  message: message,\n  senderName: senderName,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "extract-message",
+      "name": "Extract Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clients WHERE phone = '{{ $json.from }}' LIMIT 1",
+        "options": {}
+      },
+      "id": "get-client",
+      "name": "Get Client Info",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [650, 500],
+      "credentials": {
+        "postgres": {
+          "id": "3",
+          "name": "Postgres Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-3-5-sonnet-20241022\",\n  \"max_tokens\": 2048,\n  \"tools\": [\n    {\n      \"name\": \"creer_devis\",\n      \"description\": \"Créer un nouveau devis pour un client. Utilise cette fonction quand le client demande un devis, un prix, ou une estimation.\",\n      \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"client_name\": {\n            \"type\": \"string\",\n            \"description\": \"Nom complet du client\"\n          },\n          \"service_type\": {\n            \"type\": \"string\",\n            \"enum\": [\"plomberie\", \"electricite\", \"chauffage\", \"climatisation\", \"renovation\", \"autre\"],\n            \"description\": \"Type de service demandé\"\n          },\n          \"description\": {\n            \"type\": \"string\",\n            \"description\": \"Description détaillée des travaux\"\n          },\n          \"urgence\": {\n            \"type\": \"boolean\",\n            \"description\": \"Est-ce une demande urgente?\"\n          }\n        },\n        \"required\": [\"client_name\", \"service_type\", \"description\"]\n      }\n    },\n    {\n      \"name\": \"prendre_rdv\",\n      \"description\": \"Prendre un rendez-vous avec un client. Utilise cette fonction quand le client veut planifier un rendez-vous, une visite, ou une intervention.\",\n      \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"client_name\": {\n            \"type\": \"string\",\n            \"description\": \"Nom du client\"\n          },\n          \"date_souhaitee\": {\n            \"type\": \"string\",\n            \"description\": \"Date souhaitée (format: YYYY-MM-DD ou description comme 'demain', 'cette semaine')\"\n          },\n          \"type_intervention\": {\n            \"type\": \"string\",\n            \"enum\": [\"visite_technique\", \"devis_sur_place\", \"intervention\", \"maintenance\", \"urgence\"],\n            \"description\": \"Type de rendez-vous\"\n          },\n          \"adresse\": {\n            \"type\": \"string\",\n            \"description\": \"Adresse de l'intervention\"\n          }\n        },\n        \"required\": [\"client_name\", \"type_intervention\"]\n      }\n    },\n    {\n      \"name\": \"chercher_disponibilites\",\n      \"description\": \"Chercher les disponibilités dans l'agenda. Utilise cette fonction quand le client demande quand vous êtes disponible.\",\n      \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"periode\": {\n            \"type\": \"string\",\n            \"enum\": [\"aujourd'hui\", \"demain\", \"cette_semaine\", \"semaine_prochaine\"],\n            \"description\": \"Période de recherche\"\n          }\n        },\n        \"required\": [\"periode\"]\n      }\n    },\n    {\n      \"name\": \"enregistrer_client\",\n      \"description\": \"Enregistrer un nouveau client dans le CRM. Utilise cette fonction pour un nouveau client qui se présente.\",\n      \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"nom\": {\n            \"type\": \"string\",\n            \"description\": \"Nom complet\"\n          },\n          \"email\": {\n            \"type\": \"string\",\n            \"description\": \"Adresse email\"\n          },\n          \"adresse\": {\n            \"type\": \"string\",\n            \"description\": \"Adresse complète\"\n          },\n          \"source\": {\n            \"type\": \"string\",\n            \"enum\": [\"whatsapp\", \"bouche_a_oreille\", \"google\", \"facebook\", \"autre\"],\n            \"description\": \"Comment il a connu l'entreprise\"\n          }\n        },\n        \"required\": [\"nom\"]\n      }\n    },\n    {\n      \"name\": \"verifier_statut_projet\",\n      \"description\": \"Vérifier le statut d'un projet ou d'un devis existant.\",\n      \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"numero_devis\": {\n            \"type\": \"string\",\n            \"description\": \"Numéro du devis ou projet\"\n          }\n        },\n        \"required\": [\"numero_devis\"]\n      }\n    }\n  ],\n  \"system\": \"Tu es Obra, l'assistant IA professionnel d'une entreprise artisanale.\\n\\nTon rôle principal:\\n- Gérer les demandes de devis\\n- Prendre des rendez-vous\\n- Enregistrer de nouveaux clients\\n- Suivre les projets en cours\\n\\nInfo client actuel:\\nNom: {{ $('Extract Message').item.json.senderName }}\\nTéléphone: {{ $('Extract Message').item.json.from }}\\n{{ $('Get Client Info').item.json[0] ? 'Client connu - Email: ' + $('Get Client Info').item.json[0].email : 'Nouveau client' }}\\n\\nInstructions importantes:\\n1. TOUJOURS utiliser les fonctions disponibles pour les actions métier\\n2. Demander les informations manquantes avant d'appeler une fonction\\n3. Être professionnel mais sympathique\\n4. Confirmer toujours l'action qui va être effectuée\\n5. Réponses courtes (max 3 phrases)\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $('Extract Message').item.json.message }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "claude-function-calling",
+      "name": "Claude with Function Calling",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 500],
+      "credentials": {
+        "anthropicApi": {
+          "id": "4",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Analyser la réponse de Claude\nconst response = $input.item.json;\nconst stopReason = response.stop_reason;\n\nif (stopReason === 'tool_use') {\n  // Claude veut utiliser une fonction\n  const toolUse = response.content.find(c => c.type === 'tool_use');\n  \n  return {\n    needsFunction: true,\n    functionName: toolUse.name,\n    functionInput: toolUse.input,\n    toolUseId: toolUse.id,\n    textResponse: response.content.find(c => c.type === 'text')?.text || ''\n  };\n} else {\n  // Réponse simple sans fonction\n  return {\n    needsFunction: false,\n    textResponse: response.content[0].text\n  };\n}"
+      },
+      "id": "analyze-response",
+      "name": "Analyze AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 500]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.needsFunction }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "needs-function",
+      "name": "Needs Function?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1250, 500]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $('Analyze AI Response').item.json.functionName }}",
+                    "value2": "creer_devis"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "creer_devis"
+            },
+            {
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $('Analyze AI Response').item.json.functionName }}",
+                    "value2": "prendre_rdv"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "prendre_rdv"
+            },
+            {
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $('Analyze AI Response').item.json.functionName }}",
+                    "value2": "chercher_disponibilites"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "chercher_disponibilites"
+            },
+            {
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $('Analyze AI Response').item.json.functionName }}",
+                    "value2": "enregistrer_client"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "enregistrer_client"
+            }
+          ]
+        }
+      },
+      "id": "route-function",
+      "name": "Route to Function",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "devis",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "client_name": "={{ $('Analyze AI Response').item.json.functionInput.client_name }}",
+            "client_phone": "={{ $('Extract Message').item.json.from }}",
+            "service_type": "={{ $('Analyze AI Response').item.json.functionInput.service_type }}",
+            "description": "={{ $('Analyze AI Response').item.json.functionInput.description }}",
+            "urgence": "={{ $('Analyze AI Response').item.json.functionInput.urgence || false }}",
+            "statut": "en_attente",
+            "created_at": "={{ $('Extract Message').item.json.timestamp }}",
+            "source": "whatsapp_ai"
+          }
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "create-devis",
+      "name": "Create Devis",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1650, 100],
+      "credentials": {
+        "postgres": {
+          "id": "3",
+          "name": "Postgres Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "rendez_vous",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "client_name": "={{ $('Analyze AI Response').item.json.functionInput.client_name }}",
+            "client_phone": "={{ $('Extract Message').item.json.from }}",
+            "type_intervention": "={{ $('Analyze AI Response').item.json.functionInput.type_intervention }}",
+            "date_souhaitee": "={{ $('Analyze AI Response').item.json.functionInput.date_souhaitee || null }}",
+            "adresse": "={{ $('Analyze AI Response').item.json.functionInput.adresse || null }}",
+            "statut": "a_confirmer",
+            "created_at": "={{ $('Extract Message').item.json.timestamp }}",
+            "source": "whatsapp_ai"
+          }
+        }
+      },
+      "id": "create-rdv",
+      "name": "Create RDV",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1650, 250],
+      "credentials": {
+        "postgres": {
+          "id": "3",
+          "name": "Postgres Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM agenda WHERE date >= CURRENT_DATE AND statut = 'disponible' ORDER BY date ASC LIMIT 5",
+        "options": {}
+      },
+      "id": "get-disponibilites",
+      "name": "Get Disponibilités",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1650, 400],
+      "credentials": {
+        "postgres": {
+          "id": "3",
+          "name": "Postgres Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "clients",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "full_name": "={{ $('Analyze AI Response').item.json.functionInput.nom }}",
+            "phone": "={{ $('Extract Message').item.json.from }}",
+            "email": "={{ $('Analyze AI Response').item.json.functionInput.email || null }}",
+            "address": "={{ $('Analyze AI Response').item.json.functionInput.adresse || null }}",
+            "source": "={{ $('Analyze AI Response').item.json.functionInput.source || 'whatsapp' }}",
+            "status": "prospect",
+            "created_at": "={{ $('Extract Message').item.json.timestamp }}"
+          }
+        }
+      },
+      "id": "create-client",
+      "name": "Create Client",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1650, 550],
+      "credentials": {
+        "postgres": {
+          "id": "3",
+          "name": "Postgres Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Formater le résultat de la fonction pour le renvoyer à Claude\nconst functionName = $('Analyze AI Response').item.json.functionName;\nconst functionResult = $input.item.json;\n\nlet resultText = '';\n\nswitch(functionName) {\n  case 'creer_devis':\n    resultText = `Devis créé avec succès ! Numéro: ${functionResult.id}. Le client recevra le devis détaillé sous 24h.`;\n    break;\n  \n  case 'prendre_rdv':\n    resultText = `Rendez-vous enregistré ! Numéro: ${functionResult.id}. Un technicien confirmera le créneau exact dans les 2h.`;\n    break;\n  \n  case 'chercher_disponibilites':\n    const dispos = $input.all();\n    if (dispos.length > 0) {\n      const dates = dispos.map(d => {\n        const date = new Date(d.json.date);\n        return `${date.toLocaleDateString('fr-FR')} à ${date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}`;\n      }).join(', ');\n      resultText = `Disponibilités trouvées: ${dates}`;\n    } else {\n      resultText = 'Aucune disponibilité trouvée pour cette période. Je vous propose la semaine prochaine.';\n    }\n    break;\n  \n  case 'enregistrer_client':\n    resultText = `Nouveau client enregistré avec succès ! ID: ${functionResult.id}`;\n    break;\n  \n  default:\n    resultText = 'Action effectuée avec succès.';\n}\n\nreturn {\n  functionResult: resultText,\n  functionName: functionName\n};"
+      },
+      "id": "format-function-result",
+      "name": "Format Function Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1850, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construire la réponse finale à envoyer au client\nconst needsFunction = $('Analyze AI Response').item.json.needsFunction;\n\nlet finalMessage = '';\n\nif (needsFunction) {\n  // L'IA a utilisé une fonction\n  const aiText = $('Analyze AI Response').item.json.textResponse;\n  const functionResult = $('Format Function Result').item.json.functionResult;\n  \n  finalMessage = aiText ? `${aiText}\\n\\n✅ ${functionResult}` : `✅ ${functionResult}`;\n} else {\n  // Réponse simple\n  finalMessage = $('Analyze AI Response').item.json.textResponse;\n}\n\nreturn {\n  message: finalMessage\n};"
+      },
+      "id": "build-final-message",
+      "name": "Build Final Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2050, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "urlEncoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "From",
+              "value": "whatsapp:{{ $env.TWILIO_WHATSAPP_NUMBER }}"
+            },
+            {
+              "name": "To",
+              "value": "whatsapp:{{ $('Extract Message').item.json.from }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.message }}"
+            }
+          ]
+        }
+      },
+      "id": "send-whatsapp",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2250, 500],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "2",
+          "name": "Twilio Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\" } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2450, 500]
+    }
+  ],
+  "connections": {
+    "Webhook WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Extract Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Message": {
+      "main": [
+        [
+          {
+            "node": "Get Client Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Client Info": {
+      "main": [
+        [
+          {
+            "node": "Claude with Function Calling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude with Function Calling": {
+      "main": [
+        [
+          {
+            "node": "Analyze AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze AI Response": {
+      "main": [
+        [
+          {
+            "node": "Needs Function?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Function?": {
+      "main": [
+        [
+          {
+            "node": "Route to Function",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Final Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route to Function": {
+      "main": [
+        [
+          {
+            "node": "Create Devis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create RDV",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Disponibilités",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Devis": {
+      "main": [
+        [
+          {
+            "node": "Format Function Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create RDV": {
+      "main": [
+        [
+          {
+            "node": "Format Function Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Disponibilités": {
+      "main": [
+        [
+          {
+            "node": "Format Function Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Client": {
+      "main": [
+        [
+          {
+            "node": "Format Function Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Function Result": {
+      "main": [
+        [
+          {
+            "node": "Build Final Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Final Message": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "3"
+}
