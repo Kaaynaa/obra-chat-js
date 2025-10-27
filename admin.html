@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Obra</title>
+  <link rel="stylesheet" href="/styles/dashboard.css" />
+</head>
+<body>
+  <div class="dashboard">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Obra Admin</h2>
+        <div class="user-badge">Admin</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="artisans">
+          <span class="icon">👤</span>
+          <span>Artisans</span>
+        </a>
+        <a href="#" class="nav-item" data-page="stats">
+          <span class="icon">📊</span>
+          <span>Statistiques</span>
+        </a>
+        <a href="#" class="nav-item" data-page="settings">
+          <span class="icon">⚙️</span>
+          <span>Paramètres</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="btn-logout">
+          <span class="icon">🚪</span>
+          Déconnexion
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <header class="page-header">
+        <div>
+          <h1 id="pageTitle">Gestion des Artisans</h1>
+          <p id="pageSubtitle">Gérez tous les artisans de la plateforme</p>
+        </div>
+        <div class="header-actions">
+          <button id="addArtisanBtn" class="btn btn-primary">
+            <span>+</span> Ajouter un artisan
+          </button>
+        </div>
+      </header>
+
+      <!-- PAGE: ARTISANS -->
+      <section id="artisansPage" class="page-section active">
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="Rechercher un artisan..." />
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="totalArtisans">0</div>
+            <div class="stat-label">Total Artisans</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="activeArtisans">0</div>
+            <div class="stat-label">Actifs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="pendingArtisans">0</div>
+            <div class="stat-label">En attente</div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Email</th>
+                <th>Entreprise</th>
+                <th>Type d'activité</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="artisansTableBody">
+              <tr>
+                <td colspan="6" class="loading">Chargement...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PAGE: STATS -->
+      <section id="statsPage" class="page-section">
+        <div class="stats-grid">
+          <div class="stat-card large">
+            <h3>Statistiques à venir</h3>
+            <p>Cette section affichera les statistiques de la plateforme.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE: SETTINGS -->
+      <section id="settingsPage" class="page-section">
+        <div class="settings-card">
+          <h3>Paramètres du compte</h3>
+          <p>Gérez vos paramètres administrateur ici.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: AJOUTER/MODIFIER ARTISAN -->
+  <div id="artisanModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Ajouter un artisan</h2>
+        <span class="modal-close">&times;</span>
+      </div>
+      <form id="artisanForm">
+        <input type="hidden" id="artisanId" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nom complet</label>
+            <input type="text" id="artisanName" required />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="artisanEmail" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Téléphone</label>
+            <input type="tel" id="artisanPhone" />
+          </div>
+          <div class="form-group">
+            <label>SIRET</label>
+            <input type="text" id="artisanSiret" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nom de l'entreprise</label>
+            <input type="text" id="artisanCompany" required />
+          </div>
+          <div class="form-group">
+            <label>Type d'activité</label>
+            <select id="artisanType">
+              <option value="">Sélectionner...</option>
+              <option value="plombier">Plombier</option>
+              <option value="electricien">Électricien</option>
+              <option value="menuisier">Menuisier</option>
+              <option value="peintre">Peintre</option>
+              <option value="maçon">Maçon</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Adresse</label>
+          <input type="text" id="artisanAddress" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ville</label>
+            <input type="text" id="artisanCity" />
+          </div>
+          <div class="form-group">
+            <label>Code postal</label>
+            <input type="text" id="artisanPostal" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="artisanDescription" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="artisanStatus">
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+            <option value="pending">En attente</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    // Configuration Supabase
+    const supabaseUrl = 'https://ugguctzxkwpjiwtbspme.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnZ3VjdHp4a3dwaml3dGJzcG1lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0Mzk2NzcsImV4cCI6MjA3NjAxNTY3N30.z_7PoGY5UFge6ogFPMB3wVazFuH4rinYW0i-xv9pyJE';
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+    let currentUser = null;
+    let artisans = [];
+
+    // Vérifier l'authentification
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = '/auth.html';
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile?.role !== 'admin') {
+        alert('Accès non autorisé');
+        window.location.href = '/index.html';
+        return;
+      }
+
+      currentUser = profile;
+      loadArtisans();
+    }
+
+    // Charger les artisans
+    async function loadArtisans() {
+      try {
+        const { data, error } = await supabase
+          .from('artisans')
+          .select(`
+            *,
+            profiles:user_id (
+              id,
+              email,
+              full_name,
+              phone,
+              avatar_url
+            )
+          `)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        artisans = data || [];
+        renderArtisans(artisans);
+        updateStats();
+      } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors du chargement des artisans');
+      }
+    }
+
+    // Afficher les artisans
+    function renderArtisans(data) {
+      const tbody = document.getElementById('artisansTableBody');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="no-data">Aucun artisan trouvé</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(artisan => `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar">${(artisan.profiles?.full_name || 'A')[0]}</div>
+              <span>${artisan.profiles?.full_name || 'N/A'}</span>
+            </div>
+          </td>
+          <td>${artisan.profiles?.email || 'N/A'}</td>
+          <td>${artisan.company_name || 'N/A'}</td>
+          <td>${artisan.business_type || 'N/A'}</td>
+          <td>
+            <span class="status-badge status-${artisan.status}">
+              ${artisan.status === 'active' ? 'Actif' : artisan.status === 'pending' ? 'En attente' : 'Inactif'}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-icon btn-edit" data-id="${artisan.id}" title="Modifier">✏️</button>
+              <button class="btn-icon btn-delete" data-id="${artisan.id}" title="Supprimer">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      // Ajouter les événements
+      tbody.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => editArtisan(btn.dataset.id));
+      });
+      tbody.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => deleteArtisan(btn.dataset.id));
+      });
+    }
+
+    // Mettre à jour les stats
+    function updateStats() {
+      document.getElementById('totalArtisans').textContent = artisans.length;
+      document.getElementById('activeArtisans').textContent = artisans.filter(a => a.status === 'active').length;
+      document.getElementById('pendingArtisans').textContent = artisans.filter(a => a.status === 'pending').length;
+    }
+
+    // Ouvrir le modal
+    const modal = document.getElementById('artisanModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalCloses = document.querySelectorAll('.modal-close');
+
+    document.getElementById('addArtisanBtn').addEventListener('click', () => {
+      modalTitle.textContent = 'Ajouter un artisan';
+      document.getElementById('artisanForm').reset();
+      document.getElementById('artisanId').value = '';
+      modal.style.display = 'flex';
+    });
+
+    modalCloses.forEach(close => {
+      close.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+    });
+
+    // Soumettre le formulaire
+    document.getElementById('artisanForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const artisanId = document.getElementById('artisanId').value;
+
+      const formData = {
+        company_name: document.getElementById('artisanCompany').value,
+        business_type: document.getElementById('artisanType').value,
+        siret: document.getElementById('artisanSiret').value,
+        address: document.getElementById('artisanAddress').value,
+        city: document.getElementById('artisanCity').value,
+        postal_code: document.getElementById('artisanPostal').value,
+        description: document.getElementById('artisanDescription').value,
+        status: document.getElementById('artisanStatus').value
+      };
+
+      try {
+        if (artisanId) {
+          // Mise à jour
+          const { error } = await supabase
+            .from('artisans')
+            .update(formData)
+            .eq('id', artisanId);
+
+          if (error) throw error;
+
+          // Mettre à jour le profil aussi
+          const artisan = artisans.find(a => a.id === artisanId);
+          await supabase
+            .from('profiles')
+            .update({
+              full_name: document.getElementById('artisanName').value,
+              phone: document.getElementById('artisanPhone').value
+            })
+            .eq('id', artisan.user_id);
+
+          alert('Artisan mis à jour avec succès');
+        } else {
+          // Création - nécessite de créer d'abord un utilisateur
+          const email = document.getElementById('artisanEmail').value;
+          const password = Math.random().toString(36).slice(-8);
+
+          const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true
+          });
+
+          if (authError) throw authError;
+
+          await supabase.from('profiles').update({
+            role: 'artisan',
+            full_name: document.getElementById('artisanName').value,
+            phone: document.getElementById('artisanPhone').value
+          }).eq('id', authData.user.id);
+
+          const { error } = await supabase
+            .from('artisans')
+            .insert({
+              user_id: authData.user.id,
+              ...formData
+            });
+
+          if (error) throw error;
+
+          alert(`Artisan créé avec succès. Mot de passe temporaire: ${password}`);
+        }
+
+        modal.style.display = 'none';
+        loadArtisans();
+      } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur: ' + error.message);
+      }
+    });
+
+    // Modifier un artisan
+    async function editArtisan(id) {
+      const artisan = artisans.find(a => a.id === id);
+      if (!artisan) return;
+
+      modalTitle.textContent = 'Modifier l\'artisan';
+      document.getElementById('artisanId').value = artisan.id;
+      document.getElementById('artisanName').value = artisan.profiles?.full_name || '';
+      document.getElementById('artisanEmail').value = artisan.profiles?.email || '';
+      document.getElementById('artisanEmail').disabled = true;
+      document.getElementById('artisanPhone').value = artisan.profiles?.phone || '';
+      document.getElementById('artisanCompany').value = artisan.company_name || '';
+      document.getElementById('artisanType').value = artisan.business_type || '';
+      document.getElementById('artisanSiret').value = artisan.siret || '';
+      document.getElementById('artisanAddress').value = artisan.address || '';
+      document.getElementById('artisanCity').value = artisan.city || '';
+      document.getElementById('artisanPostal').value = artisan.postal_code || '';
+      document.getElementById('artisanDescription').value = artisan.description || '';
+      document.getElementById('artisanStatus').value = artisan.status || 'active';
+
+      modal.style.display = 'flex';
+    }
+
+    // Supprimer un artisan
+    async function deleteArtisan(id) {
+      if (!confirm('Êtes-vous sûr de vouloir supprimer cet artisan ?')) return;
+
+      try {
+        const { error } = await supabase
+          .from('artisans')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+
+        alert('Artisan supprimé avec succès');
+        loadArtisans();
+      } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la suppression');
+      }
+    }
+
+    // Recherche
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const search = e.target.value.toLowerCase();
+      const filtered = artisans.filter(a =>
+        (a.profiles?.full_name || '').toLowerCase().includes(search) ||
+        (a.profiles?.email || '').toLowerCase().includes(search) ||
+        (a.company_name || '').toLowerCase().includes(search)
+      );
+      renderArtisans(filtered);
+    });
+
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const page = item.dataset.page;
+
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+
+        item.classList.add('active');
+        document.getElementById(page + 'Page').classList.add('active');
+
+        const titles = {
+          artisans: ['Gestion des Artisans', 'Gérez tous les artisans de la plateforme'],
+          stats: ['Statistiques', 'Vue d\'ensemble de la plateforme'],
+          settings: ['Paramètres', 'Configurez votre compte administrateur']
+        };
+
+        document.getElementById('pageTitle').textContent = titles[page][0];
+        document.getElementById('pageSubtitle').textContent = titles[page][1];
+      });
+    });
+
+    // Déconnexion
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.href = '/auth.html';
+    });
+
+    // Initialisation
+    checkAuth();
+  </script>
+</body>
+</html>
